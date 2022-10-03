@@ -4,13 +4,15 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/outscale/osc-sdk-go/osc"
+	"github.com/aws/aws-sdk-go/aws"
+
+	oscgo "github.com/outscale/osc-sdk-go/v2"
 )
 
 func TestBlockDevice_LaunchDevices(t *testing.T) {
 	cases := []struct {
 		Config *BlockDevice
-		Result osc.BlockDeviceMappingVmCreation
+		Result oscgo.BlockDeviceMappingVmCreation
 	}{
 		{
 			Config: &BlockDevice{
@@ -21,13 +23,13 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 				DeleteOnVmDeletion: true,
 			},
 
-			Result: osc.BlockDeviceMappingVmCreation{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					SnapshotId:         "snap-1234",
-					VolumeType:         "standard",
-					VolumeSize:         8,
-					DeleteOnVmDeletion: true,
+			Result: oscgo.BlockDeviceMappingVmCreation{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					SnapshotId:         aws.String("snap-1234"),
+					VolumeType:         aws.String("standard"),
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(true),
 				},
 			},
 		},
@@ -37,11 +39,11 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 				VolumeSize: 8,
 			},
 
-			Result: osc.BlockDeviceMappingVmCreation{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeSize:         8,
-					DeleteOnVmDeletion: false,
+			Result: oscgo.BlockDeviceMappingVmCreation{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(false),
 				},
 			},
 		},
@@ -54,13 +56,13 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 				IOPS:               1000,
 			},
 
-			Result: osc.BlockDeviceMappingVmCreation{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeType:         "io1",
-					VolumeSize:         8,
-					DeleteOnVmDeletion: true,
-					Iops:               1000,
+			Result: oscgo.BlockDeviceMappingVmCreation{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeType:         aws.String("io1"),
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(true),
+					Iops:               aws.Int32(1000),
 				},
 			},
 		},
@@ -72,12 +74,12 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 				DeleteOnVmDeletion: true,
 			},
 
-			Result: osc.BlockDeviceMappingVmCreation{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeType:         "gp2",
-					VolumeSize:         8,
-					DeleteOnVmDeletion: true,
+			Result: oscgo.BlockDeviceMappingVmCreation{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeType:         aws.String("gp2"),
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(true),
 				},
 			},
 		},
@@ -89,12 +91,12 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 				DeleteOnVmDeletion: true,
 			},
 
-			Result: osc.BlockDeviceMappingVmCreation{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeType:         "gp2",
-					VolumeSize:         8,
-					DeleteOnVmDeletion: true,
+			Result: oscgo.BlockDeviceMappingVmCreation{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeType:         aws.String("gp2"),
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(true),
 				},
 			},
 		},
@@ -105,11 +107,11 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 				DeleteOnVmDeletion: true,
 			},
 
-			Result: osc.BlockDeviceMappingVmCreation{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeType:         "standard",
-					DeleteOnVmDeletion: true,
+			Result: oscgo.BlockDeviceMappingVmCreation{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeType:         aws.String("standard"),
+					DeleteOnVmDeletion: aws.Bool(true),
 				},
 			},
 		},
@@ -119,9 +121,9 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 				VirtualName: "ephemeral0",
 			},
 
-			Result: osc.BlockDeviceMappingVmCreation{
-				DeviceName:        "/dev/sdb",
-				VirtualDeviceName: "ephemeral0",
+			Result: oscgo.BlockDeviceMappingVmCreation{
+				DeviceName:        aws.String("/dev/sdb"),
+				VirtualDeviceName: aws.String("ephemeral0"),
 			},
 		},
 		{
@@ -130,9 +132,9 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 				NoDevice:   true,
 			},
 
-			Result: osc.BlockDeviceMappingVmCreation{
-				DeviceName: "/dev/sdb",
-				NoDevice:   "",
+			Result: oscgo.BlockDeviceMappingVmCreation{
+				DeviceName: aws.String("/dev/sdb"),
+				NoDevice:   aws.String(""),
 			},
 		},
 	}
@@ -143,7 +145,7 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 			LaunchMappings: []BlockDevice{*tc.Config},
 		}
 
-		expected := []osc.BlockDeviceMappingVmCreation{tc.Result}
+		expected := []oscgo.BlockDeviceMappingVmCreation{tc.Result}
 
 		launchResults := launchBlockDevices.BuildOSCLaunchDevices()
 		if !reflect.DeepEqual(expected, launchResults) {
@@ -156,7 +158,7 @@ func TestBlockDevice_LaunchDevices(t *testing.T) {
 func TestBlockDevice_OMI(t *testing.T) {
 	cases := []struct {
 		Config *BlockDevice
-		Result osc.BlockDeviceMappingImage
+		Result oscgo.BlockDeviceMappingImage
 	}{
 		{
 			Config: &BlockDevice{
@@ -167,13 +169,13 @@ func TestBlockDevice_OMI(t *testing.T) {
 				DeleteOnVmDeletion: true,
 			},
 
-			Result: osc.BlockDeviceMappingImage{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					SnapshotId:         "snap-1234",
-					VolumeType:         "standard",
-					VolumeSize:         8,
-					DeleteOnVmDeletion: true,
+			Result: oscgo.BlockDeviceMappingImage{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					SnapshotId:         aws.String("snap-1234"),
+					VolumeType:         aws.String("standard"),
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(true),
 				},
 			},
 		},
@@ -184,11 +186,11 @@ func TestBlockDevice_OMI(t *testing.T) {
 				DeleteOnVmDeletion: true,
 			},
 
-			Result: osc.BlockDeviceMappingImage{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeSize:         8,
-					DeleteOnVmDeletion: true,
+			Result: oscgo.BlockDeviceMappingImage{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(true),
 				},
 			},
 		},
@@ -201,13 +203,13 @@ func TestBlockDevice_OMI(t *testing.T) {
 				IOPS:               1000,
 			},
 
-			Result: osc.BlockDeviceMappingImage{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeType:         "io1",
-					VolumeSize:         8,
-					DeleteOnVmDeletion: true,
-					Iops:               1000,
+			Result: oscgo.BlockDeviceMappingImage{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeType:         aws.String("io1"),
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(true),
+					Iops:               aws.Int32(1000),
 				},
 			},
 		},
@@ -219,12 +221,12 @@ func TestBlockDevice_OMI(t *testing.T) {
 				DeleteOnVmDeletion: true,
 			},
 
-			Result: osc.BlockDeviceMappingImage{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeType:         "gp2",
-					VolumeSize:         8,
-					DeleteOnVmDeletion: true,
+			Result: oscgo.BlockDeviceMappingImage{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeType:         aws.String("gp2"),
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(true),
 				},
 			},
 		},
@@ -236,12 +238,12 @@ func TestBlockDevice_OMI(t *testing.T) {
 				DeleteOnVmDeletion: true,
 			},
 
-			Result: osc.BlockDeviceMappingImage{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeType:         "gp2",
-					VolumeSize:         8,
-					DeleteOnVmDeletion: true,
+			Result: oscgo.BlockDeviceMappingImage{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeType:         aws.String("gp2"),
+					VolumeSize:         aws.Int32(8),
+					DeleteOnVmDeletion: aws.Bool(true),
 				},
 			},
 		},
@@ -252,11 +254,11 @@ func TestBlockDevice_OMI(t *testing.T) {
 				DeleteOnVmDeletion: true,
 			},
 
-			Result: osc.BlockDeviceMappingImage{
-				DeviceName: "/dev/sdb",
-				Bsu: osc.BsuToCreate{
-					VolumeType:         "standard",
-					DeleteOnVmDeletion: true,
+			Result: oscgo.BlockDeviceMappingImage{
+				DeviceName: aws.String("/dev/sdb"),
+				Bsu: &oscgo.BsuToCreate{
+					VolumeType:         aws.String("standard"),
+					DeleteOnVmDeletion: aws.Bool(true),
 				},
 			},
 		},
@@ -266,9 +268,9 @@ func TestBlockDevice_OMI(t *testing.T) {
 				VirtualName: "ephemeral0",
 			},
 
-			Result: osc.BlockDeviceMappingImage{
-				DeviceName:        "/dev/sdb",
-				VirtualDeviceName: "ephemeral0",
+			Result: oscgo.BlockDeviceMappingImage{
+				DeviceName:        aws.String("/dev/sdb"),
+				VirtualDeviceName: aws.String("ephemeral0"),
 			},
 		},
 	}
@@ -278,7 +280,7 @@ func TestBlockDevice_OMI(t *testing.T) {
 			OMIMappings: []BlockDevice{*tc.Config},
 		}
 
-		expected := []osc.BlockDeviceMappingImage{tc.Result}
+		expected := []oscgo.BlockDeviceMappingImage{tc.Result}
 
 		omiResults := omiBlockDevices.BuildOscOMIDevices()
 		if !reflect.DeepEqual(expected, omiResults) {

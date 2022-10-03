@@ -4,13 +4,18 @@ go 1.19
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.40.54
+	github.com/aws/aws-sdk-go v1.44.103
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/hcl/v2 v2.14.0
 	github.com/hashicorp/packer-plugin-sdk v0.3.1
 	github.com/mitchellh/mapstructure v1.5.0
+<<<<<<< HEAD
 	github.com/outscale/osc-sdk-go v1.11.2
 	github.com/zclconf/go-cty v1.11.1
+=======
+	github.com/outscale/osc-sdk-go/v2 v2.12.0
+	github.com/zclconf/go-cty v1.10.0
+>>>>>>> upgrade sdk go from v1 to v2
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab
 )
 
