@@ -30,7 +30,7 @@ type StepCreateVolume struct {
 
 func (s *StepCreateVolume) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*osccommon.OscClient)
 	vm := state.Get("vm").(oscgo.Vm)
 	ui := state.Get("ui").(packersdk.Ui)
 
@@ -85,7 +85,7 @@ func (s *StepCreateVolume) Run(ctx context.Context, state multistep.StateBag) mu
 
 	log.Printf("Create args: %+v", createVolume)
 
-	createVolumeResp, _, err := oscconn.VolumeApi.CreateVolume(context.Background()).CreateVolumeRequest(*createVolume).Execute()
+	createVolumeResp, _, err := oscconn.Api.VolumeApi.CreateVolume(oscconn.Auth).CreateVolumeRequest(*createVolume).Execute()
 	if err != nil {
 		err := fmt.Errorf("Error creating root volume: %s", err)
 		state.Put("error", err)
@@ -125,11 +125,11 @@ func (s *StepCreateVolume) Cleanup(state multistep.StateBag) {
 		return
 	}
 
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*osccommon.OscClient)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	ui.Say("Deleting the created BSU volume...")
-	_, _, err := oscconn.VolumeApi.DeleteVolume(context.Background()).DeleteVolumeRequest(oscgo.DeleteVolumeRequest{VolumeId: s.volumeId}).Execute()
+	_, _, err := oscconn.Api.VolumeApi.DeleteVolume(oscconn.Auth).DeleteVolumeRequest(oscgo.DeleteVolumeRequest{VolumeId: s.volumeId}).Execute()
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error deleting BSU volume: %s", err))
 	}

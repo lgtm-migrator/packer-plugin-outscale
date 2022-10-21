@@ -35,7 +35,7 @@ func (s *StepCreateTags) Run(_ context.Context, state multistep.StateBag) multis
 
 		// Retrieve image list for given OMI
 		resourceIds := []string{ami}
-		imageResp, _, err := regionconn.ImageApi.ReadImages(context.Background()).ReadImagesRequest(oscgo.ReadImagesRequest{
+		imageResp, _, err := regionconn.Api.ImageApi.ReadImages(regionconn.Auth).ReadImagesRequest(oscgo.ReadImagesRequest{
 			Filters: &oscgo.FiltersImage{
 				ImageIds: &resourceIds,
 			},
@@ -87,7 +87,7 @@ func (s *StepCreateTags) Run(_ context.Context, state multistep.StateBag) multis
 				Tags:        omiTags,
 			}
 
-			_, _, err := regionconn.TagApi.CreateTags(context.Background()).CreateTagsRequest(request).Execute()
+			_, _, err := regionconn.Api.TagApi.CreateTags(regionconn.Auth).CreateTagsRequest(request).Execute()
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == "InvalidOMIID.NotFound" ||
 					awsErr.Code() == "InvalidSnapshot.NotFound" {
@@ -101,7 +101,7 @@ func (s *StepCreateTags) Run(_ context.Context, state multistep.StateBag) multis
 			}
 			// Override tags on snapshots
 			if len(snapshotTags) > 0 {
-				_, _, err = regionconn.TagApi.CreateTags(context.Background()).CreateTagsRequest(requestSnap).Execute()
+				_, _, err = regionconn.Api.TagApi.CreateTags(regionconn.Auth).CreateTagsRequest(requestSnap).Execute()
 			}
 			if err == nil {
 				return true, nil

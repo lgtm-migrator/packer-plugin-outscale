@@ -22,7 +22,7 @@ type StepPublicIp struct {
 func (s *StepPublicIp) Run(_ context.Context, state multistep.StateBag) multistep.StepAction {
 	var (
 		ui   = state.Get("ui").(packersdk.Ui)
-		conn = state.Get("osc").(*oscgo.APIClient)
+		conn = state.Get("osc").(*OscClient)
 	)
 
 	if !s.AssociatePublicIpAddress {
@@ -34,7 +34,7 @@ func (s *StepPublicIp) Run(_ context.Context, state multistep.StateBag) multiste
 
 	ui.Say("Creating temporary PublicIp for instance ")
 	allocOpts := oscgo.CreatePublicIpRequest{}
-	resp, _, err := conn.PublicIpApi.CreatePublicIp(context.Background()).CreatePublicIpRequest(allocOpts).Execute()
+	resp, _, err := conn.Api.PublicIpApi.CreatePublicIp(conn.Auth).CreatePublicIpRequest(allocOpts).Execute()
 
 	if err != nil {
 		state.Put("error", fmt.Errorf("Error creating temporary PublicIp: %s", err))
@@ -57,13 +57,13 @@ func (s *StepPublicIp) Cleanup(state multistep.StateBag) {
 	}
 
 	var (
-		conn = state.Get("osc").(*oscgo.APIClient)
+		conn = state.Get("osc").(*OscClient)
 		ui   = state.Get("ui").(packersdk.Ui)
 	)
 
 	// Remove the Public IP
 	ui.Say("Deleting temporary PublicIp...")
-	_, _, err := conn.PublicIpApi.DeletePublicIp(context.Background()).DeletePublicIpRequest(oscgo.DeletePublicIpRequest{
+	_, _, err := conn.Api.PublicIpApi.DeletePublicIp(conn.Auth).DeletePublicIpRequest(oscgo.DeletePublicIpRequest{
 		PublicIpId: &s.publicIpId,
 	}).Execute()
 

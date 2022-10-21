@@ -1,7 +1,6 @@
 package bsuvolume
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"sort"
@@ -10,6 +9,7 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	registryimage "github.com/hashicorp/packer-plugin-sdk/packer/registry/image"
 	oscgo "github.com/outscale/osc-sdk-go/v2"
+	osccommon "github.com/outscale/packer-plugin-outscale/builder/osc/common"
 )
 
 // map of region to list of volume IDs
@@ -30,7 +30,7 @@ type Artifact struct {
 	BuilderIdValue string
 
 	// Client connection for performing API stuff.
-	Conn *oscgo.APIClient
+	Conn *osccommon.OscClient
 
 	// StateData should store data such as GeneratedData
 	// to be shared with post-processors
@@ -87,7 +87,8 @@ func (a *Artifact) Destroy() error {
 			input := oscgo.DeleteVolumeRequest{
 				VolumeId: volumeID,
 			}
-			_, _, err := a.Conn.VolumeApi.DeleteVolume(context.Background()).DeleteVolumeRequest(input).Execute()
+			oscClient := *(a.Conn)
+			_, _, err := oscClient.Api.VolumeApi.DeleteVolume(oscClient.Auth).DeleteVolumeRequest(input).Execute()
 			if err != nil {
 				errors = append(errors, err)
 			}

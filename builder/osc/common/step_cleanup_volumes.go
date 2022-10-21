@@ -25,7 +25,7 @@ func (s *StepCleanupVolumes) Run(_ context.Context, state multistep.StateBag) mu
 
 // Cleanup ...
 func (s *StepCleanupVolumes) Cleanup(state multistep.StateBag) {
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*OscClient)
 	vmRaw := state.Get("vm")
 	var vm oscgo.Vm
 	if vmRaw != nil {
@@ -52,7 +52,7 @@ func (s *StepCleanupVolumes) Cleanup(state multistep.StateBag) {
 
 	// Using the volume list from the cached Vm, check with Outscale for up to
 	// date information on them
-	resp, _, err := oscconn.VolumeApi.ReadVolumes(context.Background()).ReadVolumesRequest(oscgo.ReadVolumesRequest{
+	resp, _, err := oscconn.Api.VolumeApi.ReadVolumes(oscconn.Auth).ReadVolumesRequest(oscgo.ReadVolumesRequest{
 		Filters: &oscgo.FiltersVolume{VolumeIds: &vl}}).Execute()
 
 	if err != nil {
@@ -89,7 +89,7 @@ func (s *StepCleanupVolumes) Cleanup(state multistep.StateBag) {
 		request := oscgo.DeleteVolumeRequest{
 			VolumeId: k,
 		}
-		_, _, err := oscconn.VolumeApi.DeleteVolume(context.Background()).DeleteVolumeRequest(request).Execute()
+		_, _, err := oscconn.Api.VolumeApi.DeleteVolume(oscconn.Auth).DeleteVolumeRequest(request).Execute()
 		if err != nil {
 			ui.Say(fmt.Sprintf("Error deleting volume: %s", err))
 		}

@@ -39,7 +39,7 @@ source "outscale-bsusurrogate" "test" {
             root-device-type    = "ebs"
             virtualization-type = "hvm"
         }
-	owners = ["099720109477"]
+	    owners = ["099720109477"]
         most_recent = true
     }
     omi_root_device {

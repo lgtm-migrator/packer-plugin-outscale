@@ -23,7 +23,7 @@ type StepLinkVolume struct {
 }
 
 func (s *StepLinkVolume) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*osccommon.OscClient)
 	device := state.Get("device").(string)
 	vm := state.Get("vm").(oscgo.Vm)
 	ui := state.Get("ui").(packersdk.Ui)
@@ -39,7 +39,7 @@ func (s *StepLinkVolume) Run(ctx context.Context, state multistep.StateBag) mult
 		VmId:       *vm.VmId,
 		VolumeId:   volumeId,
 	}
-	_, _, err := oscconn.VolumeApi.LinkVolume(context.Background()).LinkVolumeRequest(opts).Execute()
+	_, _, err := oscconn.Api.VolumeApi.LinkVolume(oscconn.Auth).LinkVolumeRequest(opts).Execute()
 	if err != nil {
 		err := fmt.Errorf("Error attaching volume: %s", err)
 		state.Put("error", err)
@@ -76,14 +76,14 @@ func (s *StepLinkVolume) CleanupFunc(state multistep.StateBag) error {
 		return nil
 	}
 
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*osccommon.OscClient)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	ui.Say("Detaching BSU volume...")
 	opts := oscgo.UnlinkVolumeRequest{
 		VolumeId: s.volumeId,
 	}
-	_, _, err := oscconn.VolumeApi.UnlinkVolume(context.Background()).UnlinkVolumeRequest(opts).Execute()
+	_, _, err := oscconn.Api.VolumeApi.UnlinkVolume(oscconn.Auth).UnlinkVolumeRequest(opts).Execute()
 	if err != nil {
 		return fmt.Errorf("Error detaching BSU volume: %s", err)
 	}

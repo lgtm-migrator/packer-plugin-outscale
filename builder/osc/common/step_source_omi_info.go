@@ -47,7 +47,7 @@ func isNumeric(s string) bool {
 }
 
 func (s *StepSourceOMIInfo) Run(_ context.Context, state multistep.StateBag) multistep.StepAction {
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*OscClient)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	params := oscgo.ReadImagesRequest{
@@ -82,7 +82,7 @@ func (s *StepSourceOMIInfo) Run(_ context.Context, state multistep.StateBag) mul
 	log.Printf("filters to pass to API are %#v", params.GetFilters().ImageIds)
 	log.Printf("Using OMI Filters %#v", params)
 
-	imageResp, _, err := oscconn.ImageApi.ReadImages(context.Background()).ReadImagesRequest(params).Execute()
+	imageResp, _, err := oscconn.Api.ImageApi.ReadImages(oscconn.Auth).ReadImagesRequest(params).Execute()
 	if err != nil {
 		err := fmt.Errorf("Error querying OMI: %s", err)
 		state.Put("error", err)

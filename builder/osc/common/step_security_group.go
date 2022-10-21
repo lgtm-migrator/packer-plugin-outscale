@@ -25,7 +25,7 @@ type StepSecurityGroup struct {
 func (s *StepSecurityGroup) Run(_ context.Context, state multistep.StateBag) multistep.StepAction {
 	var (
 		ui    = state.Get("ui").(packersdk.Ui)
-		conn  = state.Get("osc").(*oscgo.APIClient)
+		conn  = state.Get("osc").(*OscClient)
 		netID = state.Get("net_id").(string)
 	)
 
@@ -35,7 +35,7 @@ func (s *StepSecurityGroup) Run(_ context.Context, state multistep.StateBag) mul
 				SecurityGroupIds: &s.SecurityGroupIds,
 			},
 		}
-		resp, _, err := conn.SecurityGroupApi.ReadSecurityGroups(context.Background()).ReadSecurityGroupsRequest(req).Execute()
+		resp, _, err := conn.Api.SecurityGroupApi.ReadSecurityGroups(conn.Auth).ReadSecurityGroupsRequest(req).Execute()
 
 		if err != nil || len(*resp.SecurityGroups) == 0 {
 			err := fmt.Errorf("Couldn't find specified security group: %s", err)
@@ -58,7 +58,7 @@ func (s *StepSecurityGroup) Run(_ context.Context, state multistep.StateBag) mul
 		req := oscgo.ReadSecurityGroupsRequest{
 			Filters: &filterReq,
 		}
-		resp, _, err := conn.SecurityGroupApi.ReadSecurityGroups(context.Background()).ReadSecurityGroupsRequest(req).Execute()
+		resp, _, err := conn.Api.SecurityGroupApi.ReadSecurityGroups(conn.Auth).ReadSecurityGroupsRequest(req).Execute()
 		if err != nil || len(*resp.SecurityGroups) == 0 {
 			err := fmt.Errorf("Couldn't find security groups for filter: %s", err)
 			log.Printf("[DEBUG] %s", err.Error())
@@ -88,7 +88,7 @@ func (s *StepSecurityGroup) Run(_ context.Context, state multistep.StateBag) mul
 		Description:       "Temporary group for Packer",
 	}
 
-	resp, _, err := conn.SecurityGroupApi.CreateSecurityGroup(context.Background()).CreateSecurityGroupRequest(createSGReq).Execute()
+	resp, _, err := conn.Api.SecurityGroupApi.CreateSecurityGroup(conn.Auth).CreateSecurityGroupRequest(createSGReq).Execute()
 
 	if err != nil {
 		ui.Error(err.Error())
@@ -123,7 +123,7 @@ func (s *StepSecurityGroup) Run(_ context.Context, state multistep.StateBag) mul
 
 	ui.Say(fmt.Sprintf("Authorizing access to port %d from %s in the temporary security group...", port, s.TemporarySGSourceCidr))
 
-	_, _, err = conn.SecurityGroupRuleApi.CreateSecurityGroupRule(context.Background()).CreateSecurityGroupRuleRequest(createSGRReq).Execute()
+	_, _, err = conn.Api.SecurityGroupRuleApi.CreateSecurityGroupRule(conn.Auth).CreateSecurityGroupRuleRequest(createSGRReq).Execute()
 	if err != nil {
 		err := fmt.Errorf("Error authorizing temporary security group: %s", err)
 		state.Put("error", err)
@@ -144,12 +144,12 @@ func (s *StepSecurityGroup) Cleanup(state multistep.StateBag) {
 
 	var (
 		ui   = state.Get("ui").(packersdk.Ui)
-		conn = state.Get("osc").(*oscgo.APIClient)
+		conn = state.Get("osc").(*OscClient)
 	)
 
 	ui.Say("Deleting temporary security group...")
 
-	_, _, err := conn.SecurityGroupApi.DeleteSecurityGroup(context.Background()).DeleteSecurityGroupRequest(oscgo.DeleteSecurityGroupRequest{
+	_, _, err := conn.Api.SecurityGroupApi.DeleteSecurityGroup(conn.Auth).DeleteSecurityGroupRequest(oscgo.DeleteSecurityGroupRequest{
 		SecurityGroupId: &s.createdGroupId,
 	}).Execute()
 	if err != nil {

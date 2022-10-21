@@ -17,7 +17,6 @@ import (
 	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	oscgo "github.com/outscale/osc-sdk-go/v2"
 	osccommon "github.com/outscale/packer-plugin-outscale/builder/osc/common"
 )
 
@@ -100,9 +99,10 @@ func (b *Builder) Run(ctx context.Context, ui packersdk.Ui, hook packersdk.Hook)
 	// 	},
 	// }
 
-	var oscConn *oscgo.APIClient
-	var err error
-	if oscConn, err = b.config.NewOSCClient(); err != nil {
+	//var oscConn *osccommon.OscClient
+	//var err error
+	oscConn, err := b.config.NewOSCClient()
+	if err != nil {
 		return nil, err
 	}
 

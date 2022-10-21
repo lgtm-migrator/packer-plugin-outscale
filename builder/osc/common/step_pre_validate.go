@@ -25,13 +25,13 @@ func (s *StepPreValidate) Run(_ context.Context, state multistep.StateBag) multi
 	}
 
 	var (
-		conn   = state.Get("osc").(*oscgo.APIClient)
+		conn   = state.Get("osc").(*OscClient)
 		images []interface{}
 	)
 
 	ui.Say(fmt.Sprintf("Prevalidating OMI Name: %s", s.DestOmiName))
 
-	resp, _, err := conn.ImageApi.ReadImages(context.Background()).ReadImagesRequest(oscgo.ReadImagesRequest{
+	resp, _, err := conn.Api.ImageApi.ReadImages(conn.Auth).ReadImagesRequest(oscgo.ReadImagesRequest{
 		Filters: &oscgo.FiltersImage{
 			ImageIds: &[]string{s.DestOmiName},
 		},

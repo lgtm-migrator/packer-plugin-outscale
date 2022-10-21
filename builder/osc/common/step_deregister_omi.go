@@ -38,7 +38,7 @@ func (s *StepDeregisterOMI) Run(_ context.Context, state multistep.StateBag) mul
 		filterReq := oscgo.ReadImagesRequest{
 			Filters: &oscgo.FiltersImage{ImageNames: &[]string{s.OMIName}},
 		}
-		resp, _, err := conn.ImageApi.ReadImages(context.Background()).ReadImagesRequest(filterReq).Execute()
+		resp, _, err := conn.Api.ImageApi.ReadImages(conn.Auth).ReadImagesRequest(filterReq).Execute()
 		if err != nil {
 			err := fmt.Errorf("Error describing OMI: %s", err)
 			state.Put("error", err)
@@ -52,7 +52,7 @@ func (s *StepDeregisterOMI) Run(_ context.Context, state multistep.StateBag) mul
 		// Deregister image(s) by name
 		for i := range resp.GetImages() {
 			//We are supposing that DeleteImage does the same action as DeregisterImage
-			_, _, err := conn.ImageApi.DeleteImage(context.Background()).DeleteImageRequest(oscgo.DeleteImageRequest{
+			_, _, err := conn.Api.ImageApi.DeleteImage(conn.Auth).DeleteImageRequest(oscgo.DeleteImageRequest{
 				ImageId: resp.GetImages()[i].GetImageId(),
 			}).Execute()
 			if err != nil {
@@ -70,7 +70,7 @@ func (s *StepDeregisterOMI) Run(_ context.Context, state multistep.StateBag) mul
 				for _, b := range resp.GetImages()[i].GetBlockDeviceMappings() {
 					if b.Bsu.SnapshotId != nil {
 						request := oscgo.DeleteSnapshotRequest{SnapshotId: *b.GetBsu().SnapshotId}
-						_, _, err := conn.SnapshotApi.DeleteSnapshot(context.Background()).DeleteSnapshotRequest(request).Execute()
+						_, _, err := conn.Api.SnapshotApi.DeleteSnapshot(conn.Auth).DeleteSnapshotRequest(request).Execute()
 						if err != nil {
 							err := fmt.Errorf("Error deleting existing snapshot: %s", err)
 							state.Put("error", err)

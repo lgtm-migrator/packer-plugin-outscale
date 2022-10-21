@@ -49,7 +49,7 @@ func mostFreeOscSubnet(subnets []oscgo.Subnet) oscgo.Subnet {
 
 // Run ...
 func (s *StepNetworkInfo) Run(_ context.Context, state multistep.StateBag) multistep.StepAction {
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*OscClient)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	// NET
@@ -61,7 +61,7 @@ func (s *StepNetworkInfo) Run(_ context.Context, state multistep.StateBag) multi
 
 		log.Printf("Using NET Filters %v", params)
 
-		vpcResp, _, err := oscconn.NetApi.ReadNets(context.Background()).ReadNetsRequest(params).Execute()
+		vpcResp, _, err := oscconn.Api.NetApi.ReadNets(oscconn.Auth).ReadNetsRequest(params).Execute()
 		if err != nil {
 			err := fmt.Errorf("Error querying NETs: %s", err)
 			state.Put("error", err)
@@ -95,7 +95,7 @@ func (s *StepNetworkInfo) Run(_ context.Context, state multistep.StateBag) multi
 		params.Filters = &subnetFilter
 		log.Printf("Using Subnet Filters %v", params)
 
-		subnetsResp, _, err := oscconn.SubnetApi.ReadSubnets(context.Background()).ReadSubnetsRequest(params).Execute()
+		subnetsResp, _, err := oscconn.Api.SubnetApi.ReadSubnets(oscconn.Auth).ReadSubnetsRequest(params).Execute()
 		if err != nil {
 			err := fmt.Errorf("error querying Subnets: %s", err)
 			state.Put("error", err)
@@ -133,7 +133,7 @@ func (s *StepNetworkInfo) Run(_ context.Context, state multistep.StateBag) multi
 	// Try to find Subregion and NET Id from Subnet if they are not yet found/given
 	if s.SubnetId != "" && (s.SubregionName == "" || s.NetId == "") {
 		log.Printf("[INFO] Finding Subregion and NetId for the given subnet '%s'", s.SubnetId)
-		resp, _, err := oscconn.SubnetApi.ReadSubnets(context.Background()).ReadSubnetsRequest(oscgo.ReadSubnetsRequest{
+		resp, _, err := oscconn.Api.SubnetApi.ReadSubnets(oscconn.Auth).ReadSubnetsRequest(oscgo.ReadSubnetsRequest{
 			Filters: &oscgo.FiltersSubnet{
 				SubnetIds: &[]string{s.SubnetId},
 			},

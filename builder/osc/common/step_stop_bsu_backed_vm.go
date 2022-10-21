@@ -17,7 +17,7 @@ type StepStopBSUBackedVm struct {
 }
 
 func (s *StepStopBSUBackedVm) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*OscClient)
 	vm := state.Get("vm").(oscgo.Vm)
 	ui := state.Get("ui").(packersdk.Ui)
 
@@ -43,7 +43,7 @@ func (s *StepStopBSUBackedVm) Run(ctx context.Context, state multistep.StateBag)
 		err := retry.Run(10, 60, 6, func(i uint) (bool, error) {
 			ui.Message(fmt.Sprintf("Stopping vm, attempt %d", i+1))
 
-			_, _, err = oscconn.VmApi.StopVms(context.Background()).StopVmsRequest(oscgo.StopVmsRequest{
+			_, _, err = oscconn.Api.VmApi.StopVms(oscconn.Auth).StopVmsRequest(oscgo.StopVmsRequest{
 				VmIds: []string{*vm.VmId},
 			}).Execute()
 			if err == nil {

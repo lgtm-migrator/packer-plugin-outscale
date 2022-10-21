@@ -18,7 +18,7 @@ type stepCreateOMI struct {
 
 func (s *stepCreateOMI) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*osccommon.OscClient)
 	vm := state.Get("vm").(oscgo.Vm)
 	ui := state.Get("ui").(packersdk.Ui)
 
@@ -36,7 +36,7 @@ func (s *stepCreateOMI) Run(ctx context.Context, state multistep.StateBag) multi
 		createOpts.Description = &config.OMIDescription
 	}
 
-	resp, _, err := oscconn.ImageApi.CreateImage(context.Background()).CreateImageRequest(createOpts).Execute()
+	resp, _, err := oscconn.Api.ImageApi.CreateImage(oscconn.Auth).CreateImageRequest(createOpts).Execute()
 	if err != nil || resp.GetImage().ImageId == nil {
 		err := fmt.Errorf("Error creating OMI: %s", err)
 		state.Put("error", err)
@@ -59,7 +59,7 @@ func (s *stepCreateOMI) Run(ctx context.Context, state multistep.StateBag) multi
 		req := oscgo.ReadImagesRequest{
 			Filters: &oscgo.FiltersImage{ImageIds: &[]string{image.GetImageId()}},
 		}
-		imagesResp, _, err := oscconn.ImageApi.ReadImages(context.Background()).ReadImagesRequest(req).Execute()
+		imagesResp, _, err := oscconn.Api.ImageApi.ReadImages(oscconn.Auth).ReadImagesRequest(req).Execute()
 		if err != nil {
 			log.Printf("Unable to determine reason waiting for OMI failed: %s", err)
 			err = fmt.Errorf("Unknown error waiting for OMI")
@@ -76,7 +76,7 @@ func (s *stepCreateOMI) Run(ctx context.Context, state multistep.StateBag) multi
 	req := oscgo.ReadImagesRequest{
 		Filters: &oscgo.FiltersImage{ImageIds: &[]string{image.GetImageId()}},
 	}
-	imagesResp, _, err := oscconn.ImageApi.ReadImages(context.Background()).ReadImagesRequest(req).Execute()
+	imagesResp, _, err := oscconn.Api.ImageApi.ReadImages(oscconn.Auth).ReadImagesRequest(req).Execute()
 	if err != nil {
 		err := fmt.Errorf("Error searching for OMI: %s", err)
 		state.Put("error", err)
@@ -108,12 +108,12 @@ func (s *stepCreateOMI) Cleanup(state multistep.StateBag) {
 		return
 	}
 
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*osccommon.OscClient)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	ui.Say("Deregistering the OMI because cancellation or error...")
 	DeleteOpts := oscgo.DeleteImageRequest{ImageId: s.image.GetImageId()}
-	_, _, err := oscconn.ImageApi.DeleteImage(context.Background()).DeleteImageRequest(DeleteOpts).Execute()
+	_, _, err := oscconn.Api.ImageApi.DeleteImage(oscconn.Auth).DeleteImageRequest(DeleteOpts).Execute()
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error Deleting OMI, may still be around: %s", err))
 		return

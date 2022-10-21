@@ -1,7 +1,6 @@
 package common
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -45,12 +44,12 @@ func (t TagMap) OSCTags(ctx interpolate.Context, region string, state multistep.
 	return oscTags, nil
 }
 
-func CreateOSCTags(conn *oscgo.APIClient, resourceID string, ui packersdk.Ui, tags OSCTags) error {
+func CreateOSCTags(conn *OscClient, resourceID string, ui packersdk.Ui, tags OSCTags) error {
 	tags.Report(ui)
 	request := oscgo.CreateTagsRequest{
 		ResourceIds: []string{resourceID},
 		Tags:        tags,
 	}
-	_, _, err := conn.TagApi.CreateTags(context.Background()).CreateTagsRequest(request).Execute()
+	_, _, err := conn.Api.TagApi.CreateTags(conn.Auth).CreateTagsRequest(request).Execute()
 	return err
 }

@@ -1,7 +1,6 @@
 package common
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"sort"
@@ -81,7 +80,7 @@ func (a *Artifact) Destroy() error {
 		regionConn := config.NewOSCClientByRegion(region)
 
 		// Get image metadata
-		imageResp, _, err := regionConn.ImageApi.ReadImages(context.Background()).ReadImagesRequest(oscgo.ReadImagesRequest{
+		imageResp, _, err := regionConn.Api.ImageApi.ReadImages(regionConn.Auth).ReadImagesRequest(oscgo.ReadImagesRequest{
 			Filters: &oscgo.FiltersImage{
 				ImageIds: &[]string{imageId},
 			},
@@ -98,7 +97,7 @@ func (a *Artifact) Destroy() error {
 		input := oscgo.DeleteImageRequest{
 			ImageId: imageId,
 		}
-		_, _, err = regionConn.ImageApi.DeleteImage(context.Background()).DeleteImageRequest(input).Execute()
+		_, _, err = regionConn.Api.ImageApi.DeleteImage(regionConn.Auth).DeleteImageRequest(input).Execute()
 		if err != nil {
 			errors = append(errors, err)
 		}

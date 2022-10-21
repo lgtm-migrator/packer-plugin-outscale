@@ -22,7 +22,7 @@ type StepRegisterOMI struct {
 
 func (s *StepRegisterOMI) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*(osccommon.OscClient))
 	snapshotIds := state.Get("snapshot_ids").(map[string]string)
 	ui := state.Get("ui").(packersdk.Ui)
 
@@ -40,7 +40,7 @@ func (s *StepRegisterOMI) Run(ctx context.Context, state multistep.StateBag) mul
 	if config.OMIDescription != "" {
 		registerOpts.Description = &config.OMIDescription
 	}
-	registerResp, _, err := oscconn.ImageApi.CreateImage(context.Background()).CreateImageRequest(registerOpts).Execute()
+	registerResp, _, err := oscconn.Api.ImageApi.CreateImage(oscconn.Auth).CreateImageRequest(registerOpts).Execute()
 	if err != nil {
 		state.Put("error", fmt.Errorf("Error registering OMI: %s", err))
 		ui.Error(state.Get("error").(error).Error())
@@ -65,7 +65,7 @@ func (s *StepRegisterOMI) Run(ctx context.Context, state multistep.StateBag) mul
 	filterReq := oscgo.ReadImagesRequest{
 		Filters: &oscgo.FiltersImage{ImageIds: &[]string{*registerResp.GetImage().ImageId}},
 	}
-	imagesResp, _, err := oscconn.ImageApi.ReadImages(context.Background()).ReadImagesRequest(filterReq).Execute()
+	imagesResp, _, err := oscconn.Api.ImageApi.ReadImages(oscconn.Auth).ReadImagesRequest(filterReq).Execute()
 	if err != nil {
 		err := fmt.Errorf("Error searching for OMI: %s", err)
 		state.Put("error", err)
@@ -97,12 +97,12 @@ func (s *StepRegisterOMI) Cleanup(state multistep.StateBag) {
 		return
 	}
 
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*(osccommon.OscClient))
 	ui := state.Get("ui").(packersdk.Ui)
 
 	ui.Say("Deregistering the OMI because cancellation or error...")
 	deregisterOpts := oscgo.DeleteImageRequest{ImageId: *s.image.ImageId}
-	_, _, err := oscconn.ImageApi.DeleteImage(context.Background()).DeleteImageRequest(deregisterOpts).Execute()
+	_, _, err := oscconn.Api.ImageApi.DeleteImage(oscconn.Auth).DeleteImageRequest(deregisterOpts).Execute()
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error deregistering OMI, may still be around: %s", err))
 		return

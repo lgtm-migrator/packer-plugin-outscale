@@ -1,7 +1,6 @@
 package common
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -17,7 +16,7 @@ var (
 
 // SSHHost returns a function that can be given to the SSH communicator
 // for determining the SSH address based on the vm DNS name.
-func SSHHost(conn *oscgo.APIClient, sshInterface string) func(multistep.StateBag) (string, error) {
+func SSHHost(conn *OscClient, sshInterface string) func(multistep.StateBag) (string, error) {
 	return func(state multistep.StateBag) (string, error) {
 		const tries = 2
 		// <= with current structure to check result of describing `tries` times
@@ -63,7 +62,7 @@ func SSHHost(conn *oscgo.APIClient, sshInterface string) func(multistep.StateBag
 				VmIds: &[]string{i.VmId},
 			}*/
 			//readOpts := oscgo.ReadVmsRequest{Filters: &readFilters}
-			r, _, err := conn.VmApi.ReadVms(context.Background()).ReadVmsRequest(oscgo.ReadVmsRequest{
+			r, _, err := conn.Api.VmApi.ReadVms(conn.Auth).ReadVmsRequest(oscgo.ReadVmsRequest{
 				Filters: &oscgo.FiltersVm{
 					VmIds: &[]string{i.GetVmId()},
 				}}).Execute()
@@ -93,7 +92,7 @@ func SSHHost(conn *oscgo.APIClient, sshInterface string) func(multistep.StateBag
 
 // SSHHost returns a function that can be given to the SSH communicator
 // for determining the SSH address based on the vm DNS name.
-func OscSSHHost(conn *oscgo.APIClient, sshInterface string) func(multistep.StateBag) (string, error) {
+func OscSSHHost(conn *OscClient, sshInterface string) func(multistep.StateBag) (string, error) {
 	return func(state multistep.StateBag) (string, error) {
 		const tries = 2
 		// <= with current structure to check result of describing `tries` times
@@ -136,7 +135,7 @@ func OscSSHHost(conn *oscgo.APIClient, sshInterface string) func(multistep.State
 				return host, nil
 			}
 
-			r, _, err := conn.VmApi.ReadVms(context.Background()).ReadVmsRequest(oscgo.ReadVmsRequest{
+			r, _, err := conn.Api.VmApi.ReadVms(conn.Auth).ReadVmsRequest(oscgo.ReadVmsRequest{
 				Filters: &oscgo.FiltersVm{
 					VmIds: &[]string{i.GetVmId()},
 				}}).Execute()

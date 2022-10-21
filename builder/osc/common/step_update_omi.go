@@ -69,7 +69,7 @@ func (s *StepUpdateOMIAttributes) Run(_ context.Context, state multistep.StateBa
 		request := oscgo.UpdateImageRequest{
 			ImageId: omi,
 		}
-		_, _, err := regionconn.ImageApi.UpdateImage(context.Background()).UpdateImageRequest(request).Execute()
+		_, _, err := regionconn.Api.ImageApi.UpdateImage(regionconn.Auth).UpdateImageRequest(request).Execute()
 		if err != nil {
 			err := fmt.Errorf("Error updating OMI: %s", err)
 			state.Put("error", err)
@@ -86,7 +86,7 @@ func (s *StepUpdateOMIAttributes) Run(_ context.Context, state multistep.StateBa
 
 			ui.Message(fmt.Sprintf("Updating: %s", snapshot))
 			updateSnapshoptRequest.SnapshotId = snapshot
-			_, _, err := regionconn.SnapshotApi.UpdateSnapshot(context.Background()).UpdateSnapshotRequest(updateSnapshoptRequest).Execute()
+			_, _, err := regionconn.Api.SnapshotApi.UpdateSnapshot(regionconn.Auth).UpdateSnapshotRequest(updateSnapshoptRequest).Execute()
 			if err != nil {
 				err := fmt.Errorf("Error updating snapshot: %s", err)
 				state.Put("error", err)

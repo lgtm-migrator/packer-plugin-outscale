@@ -18,10 +18,11 @@ type StepCreateOMI struct {
 
 func (s *StepCreateOMI) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("config").(*Config)
-	osconn := state.Get("osc").(*oscgo.APIClient)
+	osconn := state.Get("osc").(*(osccommon.OscClient))
 	snapshotId := state.Get("snapshot_id").(string)
 	ui := state.Get("ui").(packersdk.Ui)
 
+	//regionconn := config.NewOSCClientByRegion(region)
 	ui.Say("Creating the OMI...")
 
 	var (
@@ -79,7 +80,7 @@ func (s *StepCreateOMI) Run(ctx context.Context, state multistep.StateBag) multi
 		registerOpts.Description = &config.OMIDescription
 	}
 
-	registerResp, _, err := osconn.ImageApi.CreateImage(context.Background()).CreateImageRequest(registerOpts).Execute()
+	registerResp, _, err := osconn.Api.ImageApi.CreateImage(osconn.Auth).CreateImageRequest(registerOpts).Execute()
 	if err != nil {
 		state.Put("error", fmt.Errorf("Error registering OMI: %s", err))
 		ui.Error(state.Get("error").(error).Error())

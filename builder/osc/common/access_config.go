@@ -43,8 +43,8 @@ func getValueFromEnvVariables(envVariables []string) (string, bool) {
 }
 
 type OscClient struct {
-	auth context.Context
-	api  *osc.APIClient
+	Auth context.Context
+	Api  *oscgo.APIClient
 }
 
 // NewOSCClient retrieves the Outscale OSC-SDK client
@@ -130,19 +130,19 @@ func (c *AccessConfig) NewOSCClientByRegion(region string) *OscClient {
 
 	skipClient.Transport = NewTransport(c.AccessKey, c.SecretKey, c.RawRegion, skipClient.Transport)
 
-	config := osc.NewConfiguration()
+	config := oscgo.NewConfiguration()
 	config.Debug = true
 	config.UserAgent = fmt.Sprintf("packer-plugin-outscale/%s", version.PluginVersion.String())
-	auth := context.WithValue(context.Background(), osc.ContextAWSv4, osc.AWSv4{
+	auth := context.WithValue(context.Background(), oscgo.ContextAWSv4, osc.AWSv4{
 		AccessKey: os.Getenv("OSC_ACCESS_KEY"),
 		SecretKey: os.Getenv("OSC_SECRET_KEY"),
 	})
-	auth = context.WithValue(auth, osc.ContextServerIndex, 0)
-	auth = context.WithValue(auth, osc.ContextServerVariables, map[string]string{"region": os.Getenv("OSC_REGION")})
+	auth = context.WithValue(auth, oscgo.ContextServerIndex, 0)
+	auth = context.WithValue(auth, oscgo.ContextServerVariables, map[string]string{"region": os.Getenv("OSC_REGION")})
 
 	oscClient := &OscClient{
-		api:  osc.NewAPIClient(config),
-		auth: auth,
+		Api:  oscgo.NewAPIClient(config),
+		Auth: auth,
 	}
 	return oscClient
 }

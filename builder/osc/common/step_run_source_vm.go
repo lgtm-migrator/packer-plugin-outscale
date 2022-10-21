@@ -46,7 +46,7 @@ type StepRunSourceVm struct {
 }
 
 func (s *StepRunSourceVm) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*OscClient)
 	securityGroupIds := state.Get("securityGroupIds").([]string)
 	ui := state.Get("ui").(packersdk.Ui)
 
@@ -134,7 +134,7 @@ func (s *StepRunSourceVm) Run(ctx context.Context, state multistep.StateBag) mul
 		runOpts.VmInitiatedShutdownBehavior = &s.VmInitiatedShutdownBehavior
 	}
 
-	runResp, _, err := oscconn.VmApi.CreateVms(context.Background()).CreateVmsRequest(runOpts).Execute()
+	runResp, _, err := oscconn.Api.VmApi.CreateVms(oscconn.Auth).CreateVmsRequest(runOpts).Execute()
 
 	if err != nil {
 		err := fmt.Errorf("Error launching source vm: %s", err)
@@ -185,7 +185,7 @@ func (s *StepRunSourceVm) Run(ctx context.Context, state multistep.StateBag) mul
 	if publicip_id, ok := state.Get("publicip_id").(string); ok {
 		ui.Say(fmt.Sprintf("Linking temporary PublicIp %s to instance %s", publicip_id, vmId))
 		request := oscgo.LinkPublicIpRequest{PublicIpId: &publicip_id, VmId: &vmId}
-		_, _, err := oscconn.PublicIpApi.LinkPublicIp(context.Background()).LinkPublicIpRequest(request).Execute()
+		_, _, err := oscconn.Api.PublicIpApi.LinkPublicIp(oscconn.Auth).LinkPublicIpRequest(request).Execute()
 		if err != nil {
 			state.Put("error", fmt.Errorf("Error linking PublicIp to VM: %s", err))
 			ui.Error(err.Error())
@@ -193,7 +193,7 @@ func (s *StepRunSourceVm) Run(ctx context.Context, state multistep.StateBag) mul
 		}
 	}
 
-	resp, _, err := oscconn.VmApi.ReadVms(context.Background()).ReadVmsRequest(request).Execute()
+	resp, _, err := oscconn.Api.VmApi.ReadVms(oscconn.Auth).ReadVmsRequest(request).Execute()
 	r := resp
 
 	if err != nil || len(r.GetVms()) == 0 {
@@ -234,7 +234,7 @@ func (s *StepRunSourceVm) Run(ctx context.Context, state multistep.StateBag) mul
 				Tags:        oscTags,
 				ResourceIds: []string{vmId},
 			}
-			_, _, err := oscconn.TagApi.CreateTags(context.Background()).CreateTagsRequest(request).Execute()
+			_, _, err := oscconn.Api.TagApi.CreateTags(oscconn.Auth).CreateTagsRequest(request).Execute()
 			if err == nil {
 				return true, nil
 			}
@@ -278,7 +278,7 @@ func (s *StepRunSourceVm) Run(ctx context.Context, state multistep.StateBag) mul
 				ResourceIds: volumeIds,
 				Tags:        volumeTags,
 			}
-			_, _, err = oscconn.TagApi.CreateTags(context.Background()).CreateTagsRequest(request).Execute()
+			_, _, err = oscconn.Api.TagApi.CreateTags(oscconn.Auth).CreateTagsRequest(request).Execute()
 
 			if err != nil {
 				err := fmt.Errorf("Error tagging source BSU Volumes on %s: %s", vm.GetVmId(), err)
@@ -293,13 +293,13 @@ func (s *StepRunSourceVm) Run(ctx context.Context, state multistep.StateBag) mul
 }
 
 func (s *StepRunSourceVm) Cleanup(state multistep.StateBag) {
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*OscClient)
 	ui := state.Get("ui").(packersdk.Ui)
 
 	// Terminate the source vm if it exists
 	if s.vmId != "" {
 		ui.Say("Terminating the source OUTSCALE vm...")
-		_, _, err := oscconn.VmApi.DeleteVms(context.Background()).DeleteVmsRequest(oscgo.DeleteVmsRequest{
+		_, _, err := oscconn.Api.VmApi.DeleteVms(oscconn.Auth).DeleteVmsRequest(oscgo.DeleteVmsRequest{
 			VmIds: []string{s.vmId},
 		}).Execute()
 		if err != nil {

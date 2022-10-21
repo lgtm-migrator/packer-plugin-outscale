@@ -52,14 +52,14 @@ func (s *StepKeyPair) Run(_ context.Context, state multistep.StateBag) multistep
 		return multistep.ActionContinue
 	}
 
-	conn := state.Get("osc").(*oscgo.APIClient)
+	conn := state.Get("osc").(*OscClient)
 
 	ui.Say(fmt.Sprintf("Creating temporary keypair: %s", s.Comm.SSHTemporaryKeyPairName))
 
 	req := oscgo.CreateKeypairRequest{
 		KeypairName: s.Comm.SSHTemporaryKeyPairName,
 	}
-	resp, _, err := conn.KeypairApi.CreateKeypair(context.Background()).CreateKeypairRequest(req).Execute()
+	resp, _, err := conn.Api.KeypairApi.CreateKeypair(conn.Auth).CreateKeypairRequest(req).Execute()
 
 	if err != nil {
 		state.Put("error", fmt.Errorf("Error creating temporary keypair: %s", err))
@@ -70,7 +70,7 @@ func (s *StepKeyPair) Run(_ context.Context, state multistep.StateBag) multistep
 
 	// Set some data for use in future steps
 	s.Comm.SSHKeyPairName = s.Comm.SSHTemporaryKeyPairName
-	s.Comm.SSHPrivateKey = []byte(*resp.Keypair.PrivateKey)
+	s.Comm.SSHPrivateKey = []byte(*resp.GetKeypair().PrivateKey)
 
 	// If we're in debug mode, output the private key to the working
 	// directory.
@@ -84,7 +84,7 @@ func (s *StepKeyPair) Run(_ context.Context, state multistep.StateBag) multistep
 		defer f.Close()
 
 		// Write the key out
-		if _, err := f.Write([]byte(*resp.Keypair.PrivateKey)); err != nil {
+		if _, err := f.Write([]byte(*resp.GetKeypair().PrivateKey)); err != nil {
 			state.Put("error", fmt.Errorf("Error saving debug key: %s", err))
 			return multistep.ActionHalt
 		}
@@ -107,7 +107,7 @@ func (s *StepKeyPair) Cleanup(state multistep.StateBag) {
 	}
 
 	var (
-		conn = state.Get("osc").(*oscgo.APIClient)
+		conn = state.Get("osc").(*OscClient)
 		ui   = state.Get("ui").(packersdk.Ui)
 	)
 
@@ -116,7 +116,7 @@ func (s *StepKeyPair) Cleanup(state multistep.StateBag) {
 	request := oscgo.DeleteKeypairRequest{
 		KeypairName: s.Comm.SSHTemporaryKeyPairName,
 	}
-	_, _, err := conn.KeypairApi.DeleteKeypair(context.Background()).DeleteKeypairRequest(request).Execute()
+	_, _, err := conn.Api.KeypairApi.DeleteKeypair(conn.Auth).DeleteKeypairRequest(request).Execute()
 	if err != nil {
 		ui.Error(fmt.Sprintf(
 			"Error cleaning up keypair. Please delete the key manually: %s", s.Comm.SSHTemporaryKeyPairName))

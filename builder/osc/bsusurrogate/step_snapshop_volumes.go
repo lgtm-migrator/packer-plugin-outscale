@@ -24,7 +24,7 @@ type StepSnapshotVolumes struct {
 }
 
 func (s *StepSnapshotVolumes) snapshotVolume(ctx context.Context, deviceName string, state multistep.StateBag) error {
-	oscconn := state.Get("osc").(*oscgo.APIClient)
+	oscconn := state.Get("osc").(*osccommon.OscClient)
 	ui := state.Get("ui").(packersdk.Ui)
 	vm := state.Get("vm").(oscgo.Vm)
 
@@ -45,7 +45,7 @@ func (s *StepSnapshotVolumes) snapshotVolume(ctx context.Context, deviceName str
 		Description: &description,
 		VolumeId:    &volumeId,
 	}
-	createSnapResp, _, err := oscconn.SnapshotApi.CreateSnapshot(context.Background()).CreateSnapshotRequest(request).Execute()
+	createSnapResp, _, err := oscconn.Api.SnapshotApi.CreateSnapshot(oscconn.Auth).CreateSnapshotRequest(request).Execute()
 	if err != nil {
 		return err
 	}
@@ -96,12 +96,12 @@ func (s *StepSnapshotVolumes) Cleanup(state multistep.StateBag) {
 	_, halted := state.GetOk(multistep.StateHalted)
 
 	if cancelled || halted {
-		oscconn := state.Get("osc").(*oscgo.APIClient)
+		oscconn := state.Get("osc").(*osccommon.OscClient)
 		ui := state.Get("ui").(packersdk.Ui)
 		ui.Say("Removing snapshots since we cancelled or halted...")
 		for _, snapshotID := range s.snapshotIds {
 			request := oscgo.DeleteSnapshotRequest{SnapshotId: snapshotID}
-			_, _, err := oscconn.SnapshotApi.DeleteSnapshot(context.Background()).DeleteSnapshotRequest(request).Execute()
+			_, _, err := oscconn.Api.SnapshotApi.DeleteSnapshot(oscconn.Auth).DeleteSnapshotRequest(request).Execute()
 			if err != nil {
 				ui.Error(fmt.Sprintf("Error: %s", err))
 			}
